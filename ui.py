@@ -5,6 +5,13 @@ from logic import *
 
 __all__ = ["UI"]
 
-class UI(ctk):
-    def __init__():
-        return 1
+class UI(ctk.CTk):
+    def __init__(self):
+        self.logic = Logic()
+
+        super().__init__()
+        self.title("2048")
+        self.geometry("1000px 1000px")
+
+
+        self.mainloop()
