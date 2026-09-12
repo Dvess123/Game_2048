@@ -8,6 +8,27 @@ class Logic:
             [0] * self.board_size
             for _ in range(self.board_size)
         ]
+
+        self.matrix[0][0] = 2
+        self.matrix[0][1] = 4
+        self.matrix[0][2] = 2
+        self.matrix[0][3] = 4
+
+        self.matrix[1][0] = 4
+        self.matrix[1][1] = 2
+        self.matrix[1][2] = 4
+        self.matrix[1][3] = 2
+
+        self.matrix[2][0] = 2
+        self.matrix[2][1] = 4
+        self.matrix[2][2] = 2
+        self.matrix[2][3] = 4
+
+        self.matrix[3][0] = 4
+
+        
+
+
         self.score = 0
         self.spawn_tile()
         self.spawn_tile()

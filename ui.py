@@ -307,15 +307,15 @@ class UI(ctk.CTk):
             self.game_area,
             text="",
             font=ctk.CTkFont(
-                size=28,
+                size=20,
                 weight="bold"
             ),
             text_color="#d32f2f"
         )
 
         self.game_over_label.place(
-            relx=0.5 + 10,
-            rely=0.84,
+            relx=0.5,
+            rely=0.94,
             anchor="center"
         )
 
@@ -332,7 +332,7 @@ class UI(ctk.CTk):
 
         self.controls_label.place(
             relx=0.5,
-            rely=0.92,
+            rely=0.90,
             anchor="center"
         )
 
@@ -736,8 +736,7 @@ class UI(ctk.CTk):
                 text="Игра окончена!"
             )
 
-        for tile in self.tiles.values():
-            tile.lift()
+            self.game_over_label.lift()
 
         self.animation_tiles.clear()
 
