@@ -1,3 +1,6 @@
-from ui import *
+from ui import UI
 
-UI()
+
+app = UI()
+
+app.mainloop()

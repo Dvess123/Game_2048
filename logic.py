@@ -1,69 +1,179 @@
 import random
 
+
 class Logic:
-    matrix = []
-
     def __init__(self):
-        self.matrix =  [[0] * 4 for _ in range(4)]
+        self.board_size = 4
+        self.matrix = [
+            [0] * self.board_size
+            for _ in range(self.board_size)
+        ]
+        self.score = 0
+        self.spawn_tile()
+        self.spawn_tile()
 
-        self.start()
+    def slide(self, direction):
+        old_matrix = [row[:] for row in self.matrix]
+        lines = self.get_lines(direction)
 
-    def start(self):
-        cell_value = 0
+        if lines is None:
+            return False, []
+
+        new_matrix = [
+            [0] * self.board_size
+            for _ in range(self.board_size)
+        ]
+
+        moves = []
+
+        for line in lines:
+            tiles = []
+
+            for y, x in line:
+                value = self.matrix[y][x]
+
+                if value != 0:
+                    tiles.append({
+                        "y": y,
+                        "x": x,
+                        "value": value
+                    })
+
+            result_index = 0
+            i = 0
+
+            while i < len(tiles):
+                current = tiles[i]
+                target_y, target_x = line[result_index]
+
+                if (
+                    i + 1 < len(tiles)
+                    and current["value"] == tiles[i + 1]["value"]
+                ):
+                    second = tiles[i + 1]
+                    new_value = current["value"] * 2
+
+                    new_matrix[target_y][target_x] = new_value
+
+                    moves.append({
+                        "old_y": current["y"],
+                        "old_x": current["x"],
+                        "new_y": target_y,
+                        "new_x": target_x,
+                        "value": current["value"],
+                        "merged": True
+                    })
+
+                    moves.append({
+                        "old_y": second["y"],
+                        "old_x": second["x"],
+                        "new_y": target_y,
+                        "new_x": target_x,
+                        "value": second["value"],
+                        "merged": True
+                    })
+
+                    self.score += new_value
+                    i += 2
+
+                else:
+                    new_matrix[target_y][target_x] = current["value"]
+
+                    moves.append({
+                        "old_y": current["y"],
+                        "old_x": current["x"],
+                        "new_y": target_y,
+                        "new_x": target_x,
+                        "value": current["value"],
+                        "merged": False
+                    })
+
+                    i += 1
+
+                result_index += 1
+
+        changed = old_matrix != new_matrix
+
+        if not changed:
+            return False, []
+
+        self.matrix = new_matrix
+
+        return True, moves
+
+    def get_lines(self, direction):
+        if direction == "left":
+            return [
+                [(y, x) for x in range(self.board_size)]
+                for y in range(self.board_size)
+            ]
+
+        if direction == "right":
+            return [
+                [
+                    (y, x)
+                    for x in range(self.board_size - 1, -1, -1)
+                ]
+                for y in range(self.board_size)
+            ]
+
+        if direction == "top":
+            return [
+                [(y, x) for y in range(self.board_size)]
+                for x in range(self.board_size)
+            ]
+
+        if direction == "bottom":
+            return [
+                [
+                    (y, x)
+                    for y in range(self.board_size - 1, -1, -1)
+                ]
+                for x in range(self.board_size)
+            ]
+
+        return None
+
+    def spawn_tile(self):
+        empty_cells = []
+
+        for y in range(self.board_size):
+            for x in range(self.board_size):
+                if self.matrix[y][x] == 0:
+                    empty_cells.append((y, x))
+
+        if not empty_cells:
+            return None
+
+        y, x = random.choice(empty_cells)
 
         if random.randint(1, 10) >= 6:
-            cell_value = 4
+            value = 4
         else:
-            cell_value = 2
-            
-        array = []
+            value = 2
 
-        for y in self.matrix:
-            for x in y:
+        self.matrix[y][x] = value
+
+        return {
+            "y": y,
+            "x": x,
+            "value": value
+        }
+
+    def is_game_over(self):
+        for y in range(self.board_size):
+            for x in range(self.board_size):
                 if self.matrix[y][x] == 0:
-                    array.append("" + y + x)
-        
-        coords = array[random.randint(0, len(array) - 1)]
+                    return False
 
-        self.matrix[coords[0]][coords[1]] = cell_value
+        for y in range(self.board_size):
+            for x in range(self.board_size - 1):
+                if self.matrix[y][x] == self.matrix[y][x + 1]:
+                    return False
 
-    def move(self, direction):
-        dx = 0
-        dy = 0
+        for y in range(self.board_size - 1):
+            for x in range(self.board_size):
+                if self.matrix[y][x] == self.matrix[y + 1][x]:
+                    return False
 
-        if direction == "left": dx = -1
-        if direction == "top": dy = -1
-        if direction == "rigth": dx = 1
-        if direction == "bottom": dy = 1
-
-        for y in range(len(self.matrix)):
-            for x in range(len(self.matrix[0])):
-                if self.matrix[y][x] != 0:
-                    coords = self.utalite_move(y, x, dy, dx)
-
-                    self.matrix[coords.y][coords.x] = self.matrix[y][x]
-                    self.matrix[y][x] = 0
-                    
-
-
-
-    def utalite_move(self,y, x, dy, dx):
-        if dy > 0:
-            for index_y in range(y + 1, len(self.matrix)):
-                if self.matrix[index_y, x] != 0: return {y: index_y, x: x}
-            return {y: len(self.matrix), x: x}
-
-        if dy < 0:
-            for index_y in range(y - 1, -1):
-                if self.matrix[index_y, x] != 0: return {y: index_y, x: x}
-            return {y: 0, x: x}
-
-        if dx > 0:
-            for index_x in range(x + 1, len(self.matrix)):
-                if self.matrix[y, index_x] != 0: return {y: y, x: index_x}
-            return {y: y, x: len(self.matrix) - 1}
-
-        if dx < 0:
-            for index_y in range(x - 1, -1):
-                if self.matrix[y, index_x] != 0: return {y: y, x: index_x}
-            return {y: y, x: 0}
+        return True
