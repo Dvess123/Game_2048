@@ -168,7 +168,7 @@ class Logic:
 
         y, x = random.choice(empty_cells)
 
-        if random.randint(1, 10) >= 6:
+        if random.randint(1, 10) >= 10:
             value = 4
         else:
             value = 2
