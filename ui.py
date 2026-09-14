@@ -3,6 +3,7 @@ import customtkinter as ctk
 import tkinter as tk
 import time
 import json
+import os
 
 from logic import Logic
 
@@ -476,6 +477,7 @@ class UI(ctk.CTk):
             return 0
 
     def save_best_score(self):
+        os.makedirs("data", exist_ok=True)
 
         data = {
             "best_score": self.best_score
