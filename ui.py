@@ -1,4 +1,6 @@
+
 import customtkinter as ctk
+import tkinter as tk
 import time
 import json
 
@@ -27,6 +29,10 @@ class UI(ctk.CTk):
 
         self.board_height = self.board_width
 
+        # ==========================================================
+        # АНИМАЦИЯ
+        # ==========================================================
+
         self.animating = False
         self.animation_duration = 150
         self.animation_start_time = None
@@ -34,6 +40,10 @@ class UI(ctk.CTk):
         self.animation_tiles = []
 
         self.game_over = False
+
+        # ==========================================================
+        # ЦВЕТА
+        # ==========================================================
 
         self.cell_colors = {
             0: "#cdc1b4",
@@ -66,6 +76,10 @@ class UI(ctk.CTk):
         }
 
         self.best_score = self.load_best_score()
+
+        # ==========================================================
+        # ОКНО
+        # ==========================================================
 
         self.title("2048")
         self.geometry("600x700")
@@ -102,11 +116,13 @@ class UI(ctk.CTk):
         )
 
         self.header.place(
-            x= 20,
+            x=20,
             y=0
         )
 
+        # ----------------------------------------------------------
         # Левая часть header
+        # ----------------------------------------------------------
 
         self.title_frame = ctk.CTkFrame(
             self.header,
@@ -143,7 +159,9 @@ class UI(ctk.CTk):
             pady=(2, 0)
         )
 
+        # ----------------------------------------------------------
         # Правая часть header
+        # ----------------------------------------------------------
 
         self.header_right = ctk.CTkFrame(
             self.header,
@@ -212,7 +230,6 @@ class UI(ctk.CTk):
                 size=13,
                 weight="bold"
             )
-
         )
 
         self.restart_button.pack(
@@ -221,16 +238,16 @@ class UI(ctk.CTk):
         )
 
         # ==========================================================
-        # BOARD
+        # BOARD — CANVAS
         # ==========================================================
 
-        self.board = ctk.CTkFrame(
+        self.board = tk.Canvas(
             self.game_area,
             width=self.board_width,
             height=self.board_height,
-            fg_color="#bbada0",
-            corner_radius=10,
-            border_width=0
+            bg="#bbada0",
+            highlightthickness=0,
+            bd=0
         )
 
         self.board.place(
@@ -249,18 +266,20 @@ class UI(ctk.CTk):
             row = []
 
             for x in range(self.board_size):
-                cell = ctk.CTkLabel(
-                    self.board,
-                    text="",
-                    width=self.cell_size,
-                    height=self.cell_size,
-                    corner_radius=9,
-                    fg_color=self.cell_colors[0]
-                )
 
-                cell.place(
-                    x=self.cell_x(x),
-                    y=self.cell_y(y)
+                x1 = self.cell_x(x)
+                y1 = self.cell_y(y)
+
+                x2 = x1 + self.cell_size
+                y2 = y1 + self.cell_size
+
+                cell = self.board.create_rectangle(
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    fill=self.cell_colors[0],
+                    outline=""
                 )
 
                 row.append(cell)
@@ -268,32 +287,54 @@ class UI(ctk.CTk):
             self.background_cells.append(row)
 
         # ==========================================================
-        # ВИДЖЕТЫ ТАЙЛОВ
+        # ТАЙЛЫ
         # ==========================================================
+
+        # Каждый элемент содержит:
+        #
+        # {
+        #     "rectangle": id прямоугольника,
+        #     "text": id текста
+        # }
+        #
+        # Всего максимум 16 тайлов.
 
         self.tile_widgets = []
 
         for _ in range(self.board_size * self.board_size):
-            tile = ctk.CTkLabel(
-                self.board,
+
+            rectangle = self.board.create_rectangle(
+                -self.cell_size * 2,
+                -self.cell_size * 2,
+                -self.cell_size,
+                -self.cell_size,
+                fill=self.cell_colors[0],
+                outline=""
+            )
+
+            text = self.board.create_text(
+                -self.cell_size * 2,
+                -self.cell_size * 2,
                 text="",
-                width=self.cell_size,
-                height=self.cell_size,
-                corner_radius=8,
-                fg_color=self.cell_colors[0],
-                text_color=self.text_colors[0],
-                font=ctk.CTkFont(
-                    size=32,
-                    weight="bold"
-                )
+                fill=self.text_colors[0],
+                font=("Arial", 32, "bold")
             )
 
-            self.tile_widgets.append(tile)
-
-            tile.place(
-                x=-self.cell_size * 2,
-                y=-self.cell_size * 2
+            self.tile_widgets.append(
+                {
+                    "rectangle": rectangle,
+                    "text": text
+                }
             )
+
+        # Позиция → тайл
+        #
+        # Например:
+        #
+        # {
+        #     (0, 1): 0,
+        #     (2, 3): 1
+        # }
 
         self.tiles = {}
 
@@ -401,6 +442,7 @@ class UI(ctk.CTk):
         )
 
         self.focus_set()
+
         self.update_score()
 
     # ==============================================================
@@ -408,12 +450,14 @@ class UI(ctk.CTk):
     # ==============================================================
 
     def load_best_score(self):
+
         try:
             with open(
                 self.score_file,
                 "r",
                 encoding="utf-8"
             ) as file:
+
                 data = json.load(file)
 
                 return int(
@@ -432,6 +476,7 @@ class UI(ctk.CTk):
             return 0
 
     def save_best_score(self):
+
         data = {
             "best_score": self.best_score
         }
@@ -441,6 +486,7 @@ class UI(ctk.CTk):
             "w",
             encoding="utf-8"
         ) as file:
+
             json.dump(
                 data,
                 file,
@@ -448,6 +494,7 @@ class UI(ctk.CTk):
             )
 
     def update_score(self):
+
         current_score = self.logic.score
 
         self.score_label.configure(
@@ -455,7 +502,9 @@ class UI(ctk.CTk):
         )
 
         if current_score > self.best_score:
+
             self.best_score = current_score
+
             self.save_best_score()
 
         self.best_score_label.configure(
@@ -467,6 +516,7 @@ class UI(ctk.CTk):
     # ==============================================================
 
     def cell_x(self, x):
+
         return (
             self.gap
             + x * (
@@ -476,6 +526,7 @@ class UI(ctk.CTk):
         )
 
     def cell_y(self, y):
+
         return (
             self.gap
             + y * (
@@ -485,43 +536,108 @@ class UI(ctk.CTk):
         )
 
     # ==============================================================
-    # TILE
+    # TILE POSITION
     # ==============================================================
+
+    def move_tile(self, tile, x, y):
+
+        rectangle = self.tile_widgets[tile]["rectangle"]
+        text = self.tile_widgets[tile]["text"]
+
+        self.board.coords(
+            rectangle,
+            x,
+            y,
+            x + self.cell_size,
+            y + self.cell_size
+        )
+
+        self.board.coords(
+            text,
+            x + self.cell_size / 2,
+            y + self.cell_size / 2
+        )
+
+    # ==============================================================
+    # TILE CONFIGURATION
+    # ==============================================================
+
     def configure_tile(self, tile, value):
+
         if value >= 1024:
             font_size = 24
+
         elif value >= 128:
             font_size = 28
+
         else:
             font_size = 32
 
-        tile.configure(
-            text=str(value),
-            fg_color=self.get_cell_color(value),
-            text_color=self.get_text_color(value),
-            font=ctk.CTkFont(
-                size=font_size,
-                weight="bold"
-            )
+        rectangle = self.tile_widgets[tile]["rectangle"]
+        text = self.tile_widgets[tile]["text"]
+
+        self.board.itemconfigure(
+            rectangle,
+            fill=self.get_cell_color(value)
         )
 
+        self.board.itemconfigure(
+            text,
+            text=str(value),
+            fill=self.get_text_color(value),
+            font=("Arial", font_size, "bold")
+        )
+
+    # ==============================================================
+    # COLORS
+    # ==============================================================
+
     def get_cell_color(self, value):
+
         if value in self.cell_colors:
             return self.cell_colors[value]
 
         return "#3c3a32"
 
     def get_text_color(self, value):
+
         if value in self.text_colors:
             return self.text_colors[value]
 
         return "#f9f6f2"
 
     # ==============================================================
+    # LIFT TILE
+    # ==============================================================
+
+    def lift_tile(self, tile):
+
+        self.board.tag_raise(
+            self.tile_widgets[tile]["rectangle"]
+        )
+
+        self.board.tag_raise(
+            self.tile_widgets[tile]["text"]
+        )
+
+    # ==============================================================
+    # HIDE TILE
+    # ==============================================================
+
+    def hide_tile(self, tile):
+
+        self.move_tile(
+            tile,
+            -self.cell_size * 2,
+            -self.cell_size * 2
+        )
+
+    # ==============================================================
     # MOVE
     # ==============================================================
 
     def move(self, direction):
+
         if self.animating:
             return
 
@@ -539,6 +655,7 @@ class UI(ctk.CTk):
         self.animation_tiles = []
 
         for move in moves:
+
             old_position = (
                 move["old_y"],
                 move["old_x"]
@@ -552,11 +669,30 @@ class UI(ctk.CTk):
             self.animation_tiles.append(
                 {
                     "tile": tile,
-                    "old_y": move["old_y"],
-                    "old_x": move["old_x"],
-                    "new_y": move["new_y"],
-                    "new_x": move["new_x"],
+
+                    "old_x": self.cell_x(
+                        move["old_x"]
+                    ),
+
+                    "old_y": self.cell_y(
+                        move["old_y"]
+                    ),
+
+                    "new_x": self.cell_x(
+                        move["new_x"]
+                    ),
+
+                    "new_y": self.cell_y(
+                        move["new_y"]
+                    ),
+
+                    "new_position": (
+                        move["new_y"],
+                        move["new_x"]
+                    ),
+
                     "value": move["value"],
+
                     "merged": move["merged"]
                 }
             )
@@ -570,6 +706,7 @@ class UI(ctk.CTk):
     # ==============================================================
 
     def animate_tiles(self):
+
         current_time = time.perf_counter()
 
         elapsed = (
@@ -590,6 +727,7 @@ class UI(ctk.CTk):
             )
         )
 
+        # Smoothstep
         progress = (
             progress
             * progress
@@ -597,21 +735,12 @@ class UI(ctk.CTk):
         )
 
         for animation in self.animation_tiles:
-            old_x = self.cell_x(
-                animation["old_x"]
-            )
 
-            old_y = self.cell_y(
-                animation["old_y"]
-            )
+            old_x = animation["old_x"]
+            old_y = animation["old_y"]
 
-            new_x = self.cell_x(
-                animation["new_x"]
-            )
-
-            new_y = self.cell_y(
-                animation["new_y"]
-            )
+            new_x = animation["new_x"]
+            new_y = animation["new_y"]
 
             x = (
                 old_x
@@ -631,14 +760,16 @@ class UI(ctk.CTk):
                 * progress
             )
 
-            animation["tile"].place(
-                x=round(x),
-                y=round(y)
+            self.move_tile(
+                animation["tile"],
+                x,
+                y
             )
 
         if progress < 1.0:
+
             self.animation_after_id = self.after(
-                10,
+                16,
                 self.animate_tiles
             )
 
@@ -651,21 +782,30 @@ class UI(ctk.CTk):
     # ==============================================================
 
     def finish_animation(self):
+
         new_tiles = {}
+
         animated_widgets = set()
 
+        # ----------------------------------------------------------
+        # Какие тайлы участвовали в анимации
+        # ----------------------------------------------------------
+
         for animation in self.animation_tiles:
+
             animated_widgets.add(
                 animation["tile"]
             )
 
+        # ----------------------------------------------------------
+        # Расставляем перемещённые тайлы
+        # ----------------------------------------------------------
+
         for animation in self.animation_tiles:
+
             tile = animation["tile"]
 
-            position = (
-                animation["new_y"],
-                animation["new_x"]
-            )
+            position = animation["new_position"]
 
             value = self.logic.matrix[
                 position[0]
@@ -674,6 +814,7 @@ class UI(ctk.CTk):
             ]
 
             if position not in new_tiles:
+
                 new_tiles[position] = tile
 
                 self.configure_tile(
@@ -681,12 +822,16 @@ class UI(ctk.CTk):
                     value
                 )
 
-                tile.place(
-                    x=self.cell_x(position[1]),
-                    y=self.cell_y(position[0])
+                self.move_tile(
+                    tile,
+                    self.cell_x(position[1]),
+                    self.cell_y(position[0])
                 )
 
+                self.lift_tile(tile)
+
             else:
+
                 survivor = new_tiles[position]
 
                 self.configure_tile(
@@ -694,20 +839,28 @@ class UI(ctk.CTk):
                     value
                 )
 
-                tile.place(
-                    x=-self.cell_size * 2,
-                    y=-self.cell_size * 2
-                )
+                self.hide_tile(tile)
+
+        # ----------------------------------------------------------
+        # Тайлы, которые вообще не двигались
+        # ----------------------------------------------------------
 
         for position, tile in self.tiles.items():
+
             if tile not in animated_widgets:
+
                 new_tiles[position] = tile
 
         self.tiles = new_tiles
 
+        # ----------------------------------------------------------
+        # Создаём новую клетку
+        # ----------------------------------------------------------
+
         spawned = self.logic.spawn_tile()
 
         if spawned is not None:
+
             position = (
                 spawned["y"],
                 spawned["x"]
@@ -722,14 +875,20 @@ class UI(ctk.CTk):
 
             self.tiles[position] = tile
 
-            tile.place(
-                x=self.cell_x(position[1]),
-                y=self.cell_y(position[0])
+            self.move_tile(
+                tile,
+                self.cell_x(position[1]),
+                self.cell_y(position[0])
             )
 
-            tile.lift()
+            self.lift_tile(tile)
+
+        # ----------------------------------------------------------
+        # Проверка окончания игры
+        # ----------------------------------------------------------
 
         if self.logic.is_game_over():
+
             self.game_over = True
 
             self.game_over_label.configure(
@@ -737,6 +896,10 @@ class UI(ctk.CTk):
             )
 
             self.game_over_label.lift()
+
+        # ----------------------------------------------------------
+        # Завершение анимации
+        # ----------------------------------------------------------
 
         self.animation_tiles.clear()
 
@@ -749,16 +912,20 @@ class UI(ctk.CTk):
     # ==============================================================
 
     def get_free_tile(self):
+
         used_tiles = set(
             self.tiles.values()
         )
 
-        for tile in self.tile_widgets:
+        for tile in range(
+            len(self.tile_widgets)
+        ):
+
             if tile not in used_tiles:
                 return tile
 
         raise RuntimeError(
-            "Не найден свободный виджет тайла."
+            "Не найден свободный тайл."
         )
 
     # ==============================================================
@@ -766,24 +933,35 @@ class UI(ctk.CTk):
     # ==============================================================
 
     def update_board(self):
+
         self.tiles.clear()
 
-        for tile in self.tile_widgets:
-            tile.place(
-                x=-self.cell_size * 2,
-                y=-self.cell_size * 2
-            )
+        # ----------------------------------------------------------
+        # Скрываем все тайлы
+        # ----------------------------------------------------------
+
+        for tile in range(
+            len(self.tile_widgets)
+        ):
+
+            self.hide_tile(tile)
+
+        # ----------------------------------------------------------
+        # Расставляем тайлы согласно Logic
+        # ----------------------------------------------------------
 
         tile_index = 0
 
         for y in range(self.board_size):
+
             for x in range(self.board_size):
+
                 value = self.logic.matrix[y][x]
 
                 if value == 0:
                     continue
 
-                tile = self.tile_widgets[tile_index]
+                tile = tile_index
 
                 tile_index += 1
 
@@ -792,12 +970,13 @@ class UI(ctk.CTk):
                     value
                 )
 
-                tile.place(
-                    x=self.cell_x(x),
-                    y=self.cell_y(y)
+                self.move_tile(
+                    tile,
+                    self.cell_x(x),
+                    self.cell_y(y)
                 )
 
-                tile.lift()
+                self.lift_tile(tile)
 
                 self.tiles[(y, x)] = tile
 
@@ -806,6 +985,7 @@ class UI(ctk.CTk):
     # ==============================================================
 
     def restart(self):
+
         if self.animating:
             return
 
@@ -818,4 +998,5 @@ class UI(ctk.CTk):
         )
 
         self.update_board()
+
         self.update_score()
