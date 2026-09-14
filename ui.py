@@ -16,7 +16,7 @@ class UI(ctk.CTk):
 
         self.logic = Logic()
 
-        self.score_file = "score.json"
+        self.score_file = "data/score.json"
 
         self.board_size = 4
         self.cell_size = 100
