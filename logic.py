@@ -131,10 +131,7 @@ class Logic:
 
         if direction == "right":
             return [
-                [
-                    (y, x)
-                    for x in range(self.board_size - 1, -1, -1)
-                ]
+                [(y, x) for x in range(self.board_size - 1, -1, -1)]
                 for y in range(self.board_size)
             ]
 
@@ -146,10 +143,7 @@ class Logic:
 
         if direction == "bottom":
             return [
-                [
-                    (y, x)
-                    for y in range(self.board_size - 1, -1, -1)
-                ]
+                [(y, x) for y in range(self.board_size - 1, -1, -1)]
                 for x in range(self.board_size)
             ]
 
@@ -187,14 +181,14 @@ class Logic:
                 if self.matrix[y][x] == 0:
                     return False
 
-        for y in range(self.board_size):
-            for x in range(self.board_size - 1):
-                if self.matrix[y][x] == self.matrix[y][x + 1]:
-                    return False
+                if y != self.board_size - 1:
+                    if self.matrix[y][x] == self.matrix[y + 1][x]:
+                        return False
 
-        for y in range(self.board_size - 1):
-            for x in range(self.board_size):
-                if self.matrix[y][x] == self.matrix[y + 1][x]:
-                    return False
+                if x != self.board_size - 1:
+                    if self.matrix[y][x] == self.matrix[y][x + 1]:
+                        return False
 
         return True
+
+
